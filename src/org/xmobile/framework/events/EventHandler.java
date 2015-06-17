@@ -30,7 +30,7 @@ public class EventHandler {
 	/*******************************************************************************
 	 * Dispatch event
 	 *******************************************************************************/
-	public void dispatchEvent(Events event){
+	public final void dispatchEvent(Events event){
 		if(event.getCallback() != null){
 			event.getCallback().handleEvent(event);
 		}else if(mCallback != null){
