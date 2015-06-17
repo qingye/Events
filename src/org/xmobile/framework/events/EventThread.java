@@ -80,6 +80,18 @@ public class EventThread extends Thread {
 	/*******************************************************************************
 	 * EnQueue
 	 *******************************************************************************/
+	private boolean checkIfExistHandler(Events event){
+		boolean ret = false;
+		ArrayList<EventHandler> hdrs = mEventObserver.getHandlers();
+		for(EventHandler h : hdrs){
+			if(event.getTarget().equals(h.src)){
+				ret = true;
+				break;
+			}
+		}
+		return ret;
+	}
+	
 	private void enQueue(Events event){
 		if(mEventQueue == null){
 			initEventQueue();
@@ -90,8 +102,11 @@ public class EventThread extends Thread {
 		 * it at the last position.
 		 *********************************************/
 		if(event.getWhen() == Events.WAIT_UNTIL_LOAD){
-			mEventQueue.addLast(event);
-			return;
+			if(!checkIfExistHandler(event)){
+				mEventQueue.addLast(event);
+				return;
+			}
+			event.setWhen(SystemClock.uptimeMillis());
 		}
 		
 		/*********************************************
