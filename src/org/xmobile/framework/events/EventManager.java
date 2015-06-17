@@ -1,5 +1,7 @@
 package org.xmobile.framework.events;
 
+import android.annotation.SuppressLint;
+import android.os.Handler;
 import android.os.Message;
 import android.os.SystemClock;
 
@@ -7,6 +9,8 @@ public class EventManager {
 
 	private static EventManager mInstance = null;
 	private EventThread mEventThread = null;
+	
+	public final static int EVENT_ID_DISPATCH = 0;
 
 	private EventManager(){
 		initEventThread();
@@ -21,8 +25,33 @@ public class EventManager {
 	
 	private void initEventThread(){
 		if(mEventThread == null){
-			mEventThread = new EventThread();
+			mEventThread = new EventThread(mHandler);
+			mEventThread.start();
+		}else{
+			mEventThread.run();
 		}
+	}
+	
+	/*******************************************************************************
+	 * In theory, this handle is created at main thread.
+	 *******************************************************************************/
+	@SuppressLint("HandlerLeak")
+	private Handler mHandler = new Handler(){
+		@Override
+		public void handleMessage(Message msg) {
+			switch(msg.what){
+			case EVENT_ID_DISPATCH:
+				Object[] obj = (Object[]) msg.obj;
+				if(obj != null && obj.length == 2){
+					((EventHandler)obj[0]).dispatchEvent((Events) obj[1]);
+				}
+				break;
+			}
+		}
+	};
+	
+	public Handler getEventManagerHandler(){
+		return mHandler;
 	}
 	
 	/*******************************************************************************
@@ -52,7 +81,11 @@ public class EventManager {
 			new Throwable("event.target is null");
 		}
 		
-		event.setWhen(SystemClock.uptimeMillis() + when);
+		if(when == Events.WAIT_UNTIL_LOAD){
+			event.setWhen(when);
+		}else{
+			event.setWhen(SystemClock.uptimeMillis() + when);
+		}
 		Message msg = mEventThread.getHandler().obtainMessage();
 		msg.what = EventThread.EVENT_ID_ENQUEUE;
 		msg.obj = event;
