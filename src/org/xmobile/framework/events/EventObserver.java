@@ -30,9 +30,11 @@ public class EventObserver {
 	
 	public void removeFrom(EventHandler handler){
 		if(mObserver != null){
-			for(EventHandler h : mObserver){
+			for(int i = 0; i < mObserver.size(); i ++){
+				EventHandler h = mObserver.get(i);
 				if(h.src == handler.src){
 					mObserver.remove(h);
+					return;
 				}
 			}
 		}
